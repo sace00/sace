@@ -10,16 +10,16 @@ from tensorflow.keras.models import load_model
 
 app = FastAPI()
 
-# Add CORS middleware to allow cross-origin requests
+# Enable CORS (important for frontend integration)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace "*" with your frontend URL in production for security
+    allow_origins=["*"],  # Replace with your frontend domain in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Google Drive file ID of your model
+# Model setup
 GDRIVE_FILE_ID = "18Fux2G1e8uuKFD5coZGj4T5OXKn26DcK"
 MODEL_FILENAME = "face_shape_model_optimized.keras"
 GDRIVE_URL = f"https://drive.google.com/uc?id={GDRIVE_FILE_ID}"
@@ -28,17 +28,12 @@ def download_model():
     print(f"Downloading model from Google Drive: {GDRIVE_URL}")
     gdown.download(GDRIVE_URL, MODEL_FILENAME, quiet=False)
 
-# Download model if not present
 if not os.path.exists(MODEL_FILENAME):
     download_model()
 
-# Load the trained Keras model once when the server starts
 model = load_model(MODEL_FILENAME)
-
-# Labels based on your model's output
 class_labels = ["diamond", "heart", "oval", "round", "square"]
 
-# Image preprocessing
 def preprocess_image(image: Image.Image) -> np.ndarray:
     image = image.convert("RGB")
     image = image.resize((224, 224))
@@ -61,3 +56,13 @@ async def predict(file: UploadFile = File(...)):
         return JSONResponse(status_code=400, content={"error": "Uploaded file is not a valid image."})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"An error occurred: {str(e)}"})
+
+# Root route
+@app.get("/")
+def root():
+    return {"message": "Face Shape API is live!"}
+
+# Health check route
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
