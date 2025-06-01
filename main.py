@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, UnidentifiedImageError
 import io
 import numpy as np
@@ -8,6 +9,15 @@ import gdown
 from tensorflow.keras.models import load_model
 
 app = FastAPI()
+
+# Add CORS middleware to allow cross-origin requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Replace "*" with your frontend URL in production for security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Google Drive file ID of your model
 GDRIVE_FILE_ID = "18Fux2G1e8uuKFD5coZGj4T5OXKn26DcK"
